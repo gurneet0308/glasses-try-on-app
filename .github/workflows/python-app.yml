@@ -1,5 +1,4 @@
-# .github/workflows/python-app.yml
-name: Python application
+name: CI/CD Pipeline
 
 on:
   push:
@@ -13,7 +12,8 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
+    - name: Checkout code
+      uses: actions/checkout@v2
 
     - name: Set up Python
       uses: actions/setup-python@v2
@@ -28,18 +28,17 @@ jobs:
     - name: Lint with flake8
       run: |
         pip install flake8
-        flake8 glasses app.py
+        flake8 app.py
 
     - name: Build Docker image
       run: |
-        docker build -t glasses-app .
+        docker build -t glasses-try-on-app .
 
-    - name: Push Docker image
-      if: github.ref == 'refs/heads/main'
-      env:
-        DOCKER_USERNAME: ${{ secrets.DOCKER_USERNAME }}
-        DOCKER_PASSWORD: ${{ secrets.DOCKER_PASSWORD }}
+    - name: Log in to Docker Hub
       run: |
-        echo "${DOCKER_PASSWORD}" | docker login -u "${DOCKER_USERNAME}" --password-stdin
-        docker tag glasses-app ${DOCKER_USERNAME}/glasses-app:latest
-        docker push ${DOCKER_USERNAME}/glasses-app:latest
+        echo "${{ secrets.DOCKER_PASSWORD }}" | docker login -u "${{ secrets.DOCKER_USERNAME }}" --password-stdin
+
+    - name: Push Docker image to Docker Hub
+      run: |
+        docker tag glasses-try-on-app ${{ secrets.DOCKER_USERNAME }}/glasses-try-on-app:latest
+        docker push ${{ secrets.DOCKER_USERNAME }}/glasses-try-on-app:latest
